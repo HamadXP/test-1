@@ -97,58 +97,83 @@
     </svg>
   </a>
 
-  <script>
-    const START_DATE = new Date("2025-07-23T00:00:00");
-    const END_DATE = new Date("2027-07-23T00:00:00");
+  <!-- REPLACE the JS fetch section with this UPDATED SCRIPT -->
+<script>
+  const START_DATE = new Date("2025-07-23T00:00:00");
+  const END_DATE = new Date("2027-07-23T00:00:00");
 
-    function updateCountdown() {
-      const now = new Date();
-      const diff = END_DATE - now;
-      const daysTotal = Math.floor((END_DATE - START_DATE) / (1000 * 60 * 60 * 24));
-      const daysDone = Math.floor((now - START_DATE) / (1000 * 60 * 60 * 24));
-      const daysLeft = Math.max(0, daysTotal - daysDone);
+  function updateCountdown() {
+    const now = new Date();
+    const diff = END_DATE - now;
+    const daysTotal = Math.floor((END_DATE - START_DATE) / (1000 * 60 * 60 * 24));
+    const daysDone = Math.floor((now - START_DATE) / (1000 * 60 * 60 * 24));
+    const daysLeft = Math.max(0, daysTotal - daysDone);
 
-      const ms = diff % 1000;
-      const sec = Math.floor(diff / 1000) % 60;
-      const min = Math.floor(diff / 1000 / 60) % 60;
-      const hr = Math.floor(diff / 1000 / 60 / 60) % 24;
-      const days = Math.floor(diff / 1000 / 60 / 60 / 24) % 30;
-      const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30)) % 12;
-      const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
+    const ms = diff % 1000;
+    const sec = Math.floor(diff / 1000) % 60;
+    const min = Math.floor(diff / 1000 / 60) % 60;
+    const hr = Math.floor(diff / 1000 / 60 / 60) % 24;
+    const days = Math.floor(diff / 1000 / 60 / 60 / 24) % 30;
+    const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30)) % 12;
+    const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
 
-      document.getElementById("countdown").innerHTML =
-        `<span>${years} yr</span> <span>${months} mo</span> <span>${days} d</span> <span>${hr} hr</span> <span>${min} min</span> <span>${sec}s</span> <span>${String(ms).padStart(3, '0')}ms</span>`;
+    document.getElementById("countdown").innerHTML =
+      `<span>${years} yr</span> <span>${months} mo</span> <span>${days} d</span> <span>${hr} hr</span> <span>${min} min</span> <span>${sec}s</span> <span>${String(ms).padStart(3, '0')}ms</span>`;
 
-      document.getElementById("days-done").textContent = daysDone;
-      document.getElementById("days-left").textContent = daysLeft;
-    }
+    document.getElementById("days-done").textContent = daysDone;
+    document.getElementById("days-left").textContent = daysLeft;
+  }
 
-    setInterval(updateCountdown, 50);
+  setInterval(updateCountdown, 50);
 
-    const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0];
 
-    fetch('excel-to-json.json')
-      .then(response => response.json())
-      .then(data => {
-        const todayData = data.find(entry => entry.Date === today);
-        const container = document.getElementById('table-container');
+  fetch('excel-to-json.json')
+    .then(response => response.json())
+    .then(data => {
+      const todayData = data.find(entry => entry.Date === today);
+      const container = document.getElementById('table-container');
 
-        if (!todayData) {
-          container.innerHTML = `<p class="text-center text-red-500 text-xl">No entry found for today (${today}).</p>`;
-          return;
-        }
+      if (!todayData) {
+        container.innerHTML = `<p class="text-center text-red-500 text-xl">No entry found for today (${today}).</p>`;
+        return;
+      }
 
-        // Create cards in two-column layout
-        Object.entries(todayData).forEach(([key, value]) => {
-          const card = document.createElement('div');
-          card.className = 'bg-green-50 border border-green-200 rounded-xl p-4 shadow-md';
-          card.innerHTML = `
-            <p class="text-sm text-gray-500 font-medium">${key}</p>
-            <p class="text-lg font-semibold text-green-800 break-words whitespace-pre-wrap">${value}</p>
-          `;
-          container.appendChild(card);
-        });
+      // Date + Level
+      const dateLevelWrapper = document.createElement('div');
+      dateLevelWrapper.className = "flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 px-2";
+
+      const dateBox = document.createElement('div');
+      dateBox.className = "bg-yellow-100 text-yellow-800 px-4 py-2 rounded-xl font-semibold shadow";
+      dateBox.textContent = `📅 Date: ${todayData.Date || '--'}`;
+
+      const levelBox = document.createElement('div');
+      levelBox.className = "bg-blue-100 text-blue-800 px-4 py-2 rounded-xl font-semibold shadow";
+      levelBox.textContent = `📊 Level: ${todayData.Level || '--'}`;
+
+      dateLevelWrapper.appendChild(dateBox);
+      dateLevelWrapper.appendChild(levelBox);
+      container.appendChild(dateLevelWrapper);
+
+      // Task Cards (excluding Date and Level)
+      const taskGrid = document.createElement('div');
+      taskGrid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-4';
+
+      Object.entries(todayData).forEach(([key, value]) => {
+        if (key === "Date" || key === "Level") return; // Skip these
+
+        const card = document.createElement('div');
+        card.className = 'bg-green-50 border border-green-200 rounded-xl p-4 shadow-md';
+        card.innerHTML = `
+          <p class="text-sm text-gray-500 font-medium">${key}</p>
+          <p class="text-lg font-semibold text-green-800 break-words whitespace-pre-wrap">${value}</p>
+        `;
+        taskGrid.appendChild(card);
       });
-  </script>
+
+      container.appendChild(taskGrid);
+    });
+</script>
+
 </body>
 </html>
